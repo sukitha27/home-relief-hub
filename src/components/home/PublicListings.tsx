@@ -2,17 +2,22 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Home, Heart, MapPin, Users, AlertTriangle } from "lucide-react";
+import { Heart, MapPin, Users, AlertTriangle, Phone, Navigation, Building } from "lucide-react";
 import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface Victim {
   id: string;
   full_name: string;
   district: string;
   ds_division: string;
+  gn_division: string;
+  phone_number: string;
   damage_type: string;
   family_members: number;
   essential_needs: string[] | null;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 interface Donor {
@@ -45,7 +50,7 @@ export function PublicListings() {
       const [victimsRes, donorsRes] = await Promise.all([
         supabase
           .from("victims")
-          .select("id, full_name, district, ds_division, damage_type, family_members, essential_needs")
+          .select("id, full_name, district, ds_division, gn_division, phone_number, damage_type, family_members, essential_needs, latitude, longitude")
           .eq("verified", true)
           .order("created_at", { ascending: false })
           .limit(6),
@@ -64,6 +69,10 @@ export function PublicListings() {
 
     fetchData();
   }, []);
+
+  const openGoogleMaps = (lat: number, lng: number) => {
+    window.open(`https://www.google.com/maps?q=${lat},${lng}`, "_blank");
+  };
 
   if (loading) {
     return (
@@ -103,14 +112,47 @@ export function PublicListings() {
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-3">
+                    {/* Phone Number */}
+                    <a 
+                      href={`tel:${victim.phone_number}`}
+                      className="flex items-center gap-2 text-sm text-primary hover:underline"
+                    >
+                      <Phone className="h-4 w-4" />
+                      {victim.phone_number}
+                    </a>
+
+                    {/* District */}
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <MapPin className="h-4 w-4" />
-                      {victim.district}, {victim.ds_division}
+                      {victim.district}
                     </div>
+
+                    {/* DS & GN Division */}
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Building className="h-4 w-4" />
+                      <span>DS: {victim.ds_division} | GN: {victim.gn_division}</span>
+                    </div>
+
+                    {/* GPS Location */}
+                    {victim.latitude && victim.longitude && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={() => openGoogleMaps(victim.latitude!, victim.longitude!)}
+                      >
+                        <Navigation className="h-4 w-4 mr-2" />
+                        Open in Google Maps
+                      </Button>
+                    )}
+
+                    {/* Family Members */}
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Users className="h-4 w-4" />
                       {victim.family_members} family member{victim.family_members > 1 ? "s" : ""}
                     </div>
+
+                    {/* Essential Needs */}
                     {victim.essential_needs && victim.essential_needs.length > 0 && (
                       <div className="flex flex-wrap gap-1">
                         {victim.essential_needs.slice(0, 3).map((need) => (
