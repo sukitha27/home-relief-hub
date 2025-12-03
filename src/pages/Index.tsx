@@ -103,7 +103,7 @@ export default function Index() {
       {/* Footer */}
       <footer className="border-t border-border bg-muted/50 py-8">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>© 2024 HomeRelief. Together we rebuild.</p>
+          <p>© 2025 HomeRelief Sri Lanka. Together we rebuild.</p>
         </div>
       </footer>
     </Layout>
