@@ -1,5 +1,5 @@
 import { Navigation } from "./Navigation";
-import { Analytics } from "@vercel/analytics/next";
+import { Analytics } from "@vercel/analytics/react";
 
 interface LayoutProps {
   children: React.ReactNode;
