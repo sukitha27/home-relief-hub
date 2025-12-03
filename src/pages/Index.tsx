@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { Home, Heart, Users, ArrowRight } from "lucide-react";
+import { Home, Heart, Users, ArrowRight, MapPin } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { PublicListings } from "@/components/home/PublicListings";
@@ -35,6 +36,10 @@ export default function Index() {
       <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-secondary/5 py-20 md:py-32">
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-3xl text-center">
+             <Badge variant="outline" className="mb-6 px-4 py-1.5">
+              <MapPin className="h-3 w-3 mr-1" />
+              Serving all 25 districts of Sri Lanka
+            </Badge>
             <h1 className="mb-6 text-4xl font-bold tracking-tight text-foreground md:text-5xl lg:text-6xl animate-fade-in">
               Rebuilding Homes,{" "}
               <span className="text-primary">Restoring Hope</span>
