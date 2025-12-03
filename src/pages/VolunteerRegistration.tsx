@@ -69,6 +69,14 @@ export default function VolunteerRegistration() {
     }));
   };
 
+  const handleSkillClick = (skill: VolunteerSkill, e: React.MouseEvent) => {
+    // Prevent the checkbox's own handler from firing
+    if ((e.target as HTMLElement).tagName === 'INPUT') {
+      return;
+    }
+    toggleSkill(skill);
+  };
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-12">
@@ -120,14 +128,18 @@ export default function VolunteerRegistration() {
                         ? "border-primary bg-primary/5"
                         : "border-border hover:border-primary/50"
                     }`}
-                    onClick={() => toggleSkill(skill.value as VolunteerSkill)}
+                    onClick={(e) => handleSkillClick(skill.value as VolunteerSkill, e)}
                   >
                     <Checkbox
                       id={skill.value}
                       checked={formData.skills.includes(skill.value as VolunteerSkill)}
                       onCheckedChange={() => toggleSkill(skill.value as VolunteerSkill)}
+                      onClick={(e) => e.stopPropagation()} // Prevent event bubbling
                     />
-                    <Label htmlFor={skill.value} className="cursor-pointer font-normal">
+                    <Label 
+                      htmlFor={skill.value} 
+                      className="cursor-pointer font-normal flex-1"
+                    >
                       {skill.label}
                     </Label>
                   </div>
