@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { PublicListings } from "@/components/home/PublicListings";
+import { StatsSection } from "@/components/home/StatsSection";
 
 const actions = [
   {
@@ -36,7 +37,7 @@ export default function Index() {
       <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-secondary/5 py-20 md:py-32">
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-3xl text-center">
-             <Badge variant="outline" className="mb-6 px-4 py-1.5">
+            <Badge variant="outline" className="mb-6 px-4 py-1.5">
               <MapPin className="h-3 w-3 mr-1" />
               Serving all 25 districts of Sri Lanka
             </Badge>
@@ -65,6 +66,9 @@ export default function Index() {
           </div>
         </div>
       </section>
+
+      {/* Stats Section - NEW */}
+      <StatsSection />
 
       {/* Actions Section */}
       <section className="py-16 md:py-24">
