@@ -12,6 +12,7 @@ import VolunteerRegistration from "./pages/VolunteerRegistration";
 import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import FloodMapPage from "@/pages/FloodMapPage"; // Import the FloodMapPage
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,8 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            {/* Add Flood Map Route */}
+            <Route path="/flood-map" element={<FloodMapPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

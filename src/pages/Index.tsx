@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { PublicListings } from "@/components/home/PublicListings";
 import { StatsSection } from "@/components/home/StatsSection";
 import { ExternalLink } from "lucide-react";
+import { FloodMap } from "@/components/home/FloodMap";
 
 const actions = [
   {
@@ -63,6 +64,16 @@ export default function Index() {
                   Donate Now
                 </Link>
               </Button>
+
+              {/* Add Flood Map Button */}
+              <FloodMap
+                trigger={
+                  <Button variant="outline" size="lg" className="gap-2">
+                    <MapPin className="h-4 w-4" />
+                    View Flood Map
+                  </Button>
+                }
+              />
             </div>
           </div>
         </div>
