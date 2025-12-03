@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Home, Heart, Users, ArrowRight } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
+import { PublicListings } from "@/components/home/PublicListings";
 
 const actions = [
   {
@@ -95,6 +96,9 @@ export default function Index() {
           </div>
         </div>
       </section>
+
+      {/* Public Listings */}
+      <PublicListings />
 
       {/* Footer */}
       <footer className="border-t border-border bg-muted/50 py-8">

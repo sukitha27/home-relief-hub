@@ -4,9 +4,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Home, Heart, Users, RefreshCw } from "lucide-react";
+import { Loader2, Home, Heart, Users, RefreshCw, Check, X, MapPin, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
+import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Victim {
   id: string;
@@ -19,6 +21,9 @@ interface Victim {
   family_members: number;
   essential_needs: string[] | null;
   created_at: string;
+  verified: boolean;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 interface Donor {
@@ -29,6 +34,7 @@ interface Donor {
   support_type: string;
   description: string | null;
   created_at: string;
+  verified: boolean;
 }
 
 interface Volunteer {
@@ -55,6 +61,7 @@ const supportColors: Record<string, string> = {
 };
 
 export default function Admin() {
+  const { user, signOut } = useAuth();
   const [victims, setVictims] = useState<Victim[]>([]);
   const [donors, setDonors] = useState<Donor[]>([]);
   const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
@@ -83,18 +90,61 @@ export default function Admin() {
     fetchData();
   }, []);
 
+  const verifyVictim = async (id: string, verified: boolean) => {
+    const { error } = await supabase
+      .from("victims")
+      .update({ verified })
+      .eq("id", id);
+
+    if (error) {
+      toast.error("Failed to update verification status");
+    } else {
+      toast.success(verified ? "Victim verified" : "Verification removed");
+      setVictims((prev) =>
+        prev.map((v) => (v.id === id ? { ...v, verified } : v))
+      );
+    }
+  };
+
+  const verifyDonor = async (id: string, verified: boolean) => {
+    const { error } = await supabase
+      .from("donors")
+      .update({ verified })
+      .eq("id", id);
+
+    if (error) {
+      toast.error("Failed to update verification status");
+    } else {
+      toast.success(verified ? "Donor verified" : "Verification removed");
+      setDonors((prev) =>
+        prev.map((d) => (d.id === id ? { ...d, verified } : d))
+      );
+    }
+  };
+
+  const openGoogleMaps = (lat: number, lng: number) => {
+    window.open(`https://www.google.com/maps?q=${lat},${lng}`, "_blank");
+  };
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-12">
-        <div className="mb-8 flex items-center justify-between">
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
-            <p className="text-muted-foreground">View all registrations</p>
+            <p className="text-muted-foreground">Manage registrations and verifications</p>
           </div>
-          <Button variant="outline" onClick={fetchData} disabled={loading}>
-            <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-            Refresh
-          </Button>
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="text-sm text-muted-foreground">{user?.email}</span>
+            <Button variant="outline" onClick={fetchData} disabled={loading}>
+              <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+              Refresh
+            </Button>
+            <Button variant="ghost" onClick={signOut}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign Out
+            </Button>
+          </div>
         </div>
 
         {loading ? (
@@ -119,33 +169,54 @@ export default function Admin() {
             </TabsList>
 
             <TabsContent value="victims">
-              <div className="rounded-xl border border-border bg-card overflow-hidden">
+              <div className="rounded-xl border border-border bg-card overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead>Status</TableHead>
                       <TableHead>Name</TableHead>
                       <TableHead>Phone</TableHead>
                       <TableHead>Location</TableHead>
+                      <TableHead>GPS</TableHead>
                       <TableHead>Damage</TableHead>
                       <TableHead>Family</TableHead>
-                      <TableHead>Needs</TableHead>
                       <TableHead>Date</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {victims.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                           No victims registered yet
                         </TableCell>
                       </TableRow>
                     ) : (
                       victims.map((victim) => (
                         <TableRow key={victim.id}>
+                          <TableCell>
+                            <Badge variant={victim.verified ? "default" : "secondary"}>
+                              {victim.verified ? "Verified" : "Pending"}
+                            </Badge>
+                          </TableCell>
                           <TableCell className="font-medium">{victim.full_name}</TableCell>
                           <TableCell>{victim.phone_number}</TableCell>
                           <TableCell className="text-sm">
                             {victim.district}, {victim.ds_division}
+                          </TableCell>
+                          <TableCell>
+                            {victim.latitude && victim.longitude ? (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => openGoogleMaps(victim.latitude!, victim.longitude!)}
+                              >
+                                <MapPin className="h-4 w-4 mr-1" />
+                                View
+                              </Button>
+                            ) : (
+                              <span className="text-muted-foreground text-sm">-</span>
+                            )}
                           </TableCell>
                           <TableCell>
                             <Badge className={damageColors[victim.damage_type] || ""}>
@@ -153,22 +224,29 @@ export default function Admin() {
                             </Badge>
                           </TableCell>
                           <TableCell>{victim.family_members}</TableCell>
-                          <TableCell className="max-w-[200px]">
-                            <div className="flex flex-wrap gap-1">
-                              {victim.essential_needs?.slice(0, 3).map((need) => (
-                                <Badge key={need} variant="outline" className="text-xs">
-                                  {need}
-                                </Badge>
-                              ))}
-                              {(victim.essential_needs?.length || 0) > 3 && (
-                                <Badge variant="outline" className="text-xs">
-                                  +{(victim.essential_needs?.length || 0) - 3}
-                                </Badge>
-                              )}
-                            </div>
-                          </TableCell>
                           <TableCell className="text-sm text-muted-foreground">
                             {format(new Date(victim.created_at), "MMM d, yyyy")}
+                          </TableCell>
+                          <TableCell>
+                            {victim.verified ? (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => verifyVictim(victim.id, false)}
+                              >
+                                <X className="h-4 w-4 mr-1" />
+                                Unverify
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => verifyVictim(victim.id, true)}
+                              >
+                                <Check className="h-4 w-4 mr-1" />
+                                Verify
+                              </Button>
+                            )}
                           </TableCell>
                         </TableRow>
                       ))
@@ -179,27 +257,34 @@ export default function Admin() {
             </TabsContent>
 
             <TabsContent value="donors">
-              <div className="rounded-xl border border-border bg-card overflow-hidden">
+              <div className="rounded-xl border border-border bg-card overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead>Status</TableHead>
                       <TableHead>Name</TableHead>
                       <TableHead>Contact</TableHead>
                       <TableHead>Support Type</TableHead>
                       <TableHead>Description</TableHead>
                       <TableHead>Date</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {donors.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                           No donors registered yet
                         </TableCell>
                       </TableRow>
                     ) : (
                       donors.map((donor) => (
                         <TableRow key={donor.id}>
+                          <TableCell>
+                            <Badge variant={donor.verified ? "default" : "secondary"}>
+                              {donor.verified ? "Verified" : "Pending"}
+                            </Badge>
+                          </TableCell>
                           <TableCell className="font-medium">{donor.name}</TableCell>
                           <TableCell className="text-sm">
                             {donor.phone && <div>{donor.phone}</div>}
@@ -216,6 +301,27 @@ export default function Admin() {
                           <TableCell className="text-sm text-muted-foreground">
                             {format(new Date(donor.created_at), "MMM d, yyyy")}
                           </TableCell>
+                          <TableCell>
+                            {donor.verified ? (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => verifyDonor(donor.id, false)}
+                              >
+                                <X className="h-4 w-4 mr-1" />
+                                Unverify
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => verifyDonor(donor.id, true)}
+                              >
+                                <Check className="h-4 w-4 mr-1" />
+                                Verify
+                              </Button>
+                            )}
+                          </TableCell>
                         </TableRow>
                       ))
                     )}
@@ -225,7 +331,7 @@ export default function Admin() {
             </TabsContent>
 
             <TabsContent value="volunteers">
-              <div className="rounded-xl border border-border bg-card overflow-hidden">
+              <div className="rounded-xl border border-border bg-card overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>

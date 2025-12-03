@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Upload } from "lucide-react";
+import { Loader2, Upload, MapPin } from "lucide-react";
 
 const damageTypes = [
   { value: "minor", label: "Minor Damage" },
@@ -33,6 +33,7 @@ type DamageType = "minor" | "partial" | "severe" | "total_loss";
 export default function VictimRegistration() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [gettingLocation, setGettingLocation] = useState(false);
   const [formData, setFormData] = useState({
     full_name: "",
     phone_number: "",
@@ -42,8 +43,35 @@ export default function VictimRegistration() {
     damage_type: "" as DamageType | "",
     family_members: 1,
     essential_needs: [] as string[],
+    latitude: null as number | null,
+    longitude: null as number | null,
   });
   const [photoFile, setPhotoFile] = useState<File | null>(null);
+
+  const getGPSLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error("Geolocation is not supported by your browser");
+      return;
+    }
+
+    setGettingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setFormData((prev) => ({
+          ...prev,
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        }));
+        toast.success("Location captured successfully");
+        setGettingLocation(false);
+      },
+      (error) => {
+        toast.error("Unable to get location: " + error.message);
+        setGettingLocation(false);
+      },
+      { enableHighAccuracy: true }
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,6 +112,8 @@ export default function VictimRegistration() {
         family_members: formData.family_members,
         essential_needs: formData.essential_needs,
         photo_url,
+        latitude: formData.latitude,
+        longitude: formData.longitude,
       });
 
       if (error) throw error;
@@ -227,6 +257,42 @@ export default function VictimRegistration() {
                   </div>
                 ))}
               </div>
+            </div>
+
+            {/* GPS Location */}
+            <div className="space-y-2">
+              <Label>GPS Location (for verification)</Label>
+              <div className="flex items-center gap-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={getGPSLocation}
+                  disabled={gettingLocation}
+                >
+                  {gettingLocation ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Getting location...
+                    </>
+                  ) : (
+                    <>
+                      <MapPin className="mr-2 h-4 w-4" />
+                      Capture My Location
+                    </>
+                  )}
+                </Button>
+                {formData.latitude && formData.longitude && (
+                  <span className="text-sm text-success flex items-center gap-1">
+                    <MapPin className="h-4 w-4" />
+                    Location captured
+                  </span>
+                )}
+              </div>
+              {formData.latitude && formData.longitude && (
+                <p className="text-xs text-muted-foreground">
+                  Coordinates: {formData.latitude.toFixed(6)}, {formData.longitude.toFixed(6)}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
