@@ -4,7 +4,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Home, Heart, Users, RefreshCw, Check, X, MapPin, LogOut } from "lucide-react";
+import { Loader2, Home, Heart, Users, RefreshCw, Check, X, MapPin, LogOut, TrendingUp, ShieldCheck, Clock } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -145,6 +146,73 @@ export default function Admin() {
               Sign Out
             </Button>
           </div>
+        </div>
+
+        {/* Analytics Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <Home className="h-4 w-4" />
+                Total Victims
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{victims.length}</div>
+              <p className="text-xs text-muted-foreground">
+                <ShieldCheck className="h-3 w-3 inline mr-1" />
+                {victims.filter(v => v.verified).length} verified
+              </p>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <Heart className="h-4 w-4" />
+                Total Donors
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{donors.length}</div>
+              <p className="text-xs text-muted-foreground">
+                <ShieldCheck className="h-3 w-3 inline mr-1" />
+                {donors.filter(d => d.verified).length} verified
+              </p>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Total Volunteers
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{volunteers.length}</div>
+              <p className="text-xs text-muted-foreground">
+                {volunteers.reduce((acc, v) => acc + v.skills.length, 0)} skills registered
+              </p>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                Pending Review
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-warning">
+                {victims.filter(v => !v.verified).length + donors.filter(d => !d.verified).length}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Awaiting verification
+              </p>
+            </CardContent>
+          </Card>
         </div>
 
         {loading ? (
