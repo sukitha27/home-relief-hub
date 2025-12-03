@@ -25,6 +25,7 @@ interface Victim {
   verified: boolean;
   latitude: number | null;
   longitude: number | null;
+  photo_url: string | null;
 }
 
 interface Donor {
@@ -242,6 +243,7 @@ export default function Admin() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Status</TableHead>
+                      <TableHead>Photo</TableHead>
                       <TableHead>Name</TableHead>
                       <TableHead>Phone</TableHead>
                       <TableHead>Location</TableHead>
@@ -255,7 +257,7 @@ export default function Admin() {
                   <TableBody>
                     {victims.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                           No victims registered yet
                         </TableCell>
                       </TableRow>
@@ -266,6 +268,19 @@ export default function Admin() {
                             <Badge variant={victim.verified ? "default" : "secondary"}>
                               {victim.verified ? "Verified" : "Pending"}
                             </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {victim.photo_url ? (
+                              <a href={victim.photo_url} target="_blank" rel="noopener noreferrer">
+                                <img 
+                                  src={victim.photo_url} 
+                                  alt="Damage" 
+                                  className="w-16 h-12 object-cover rounded cursor-pointer hover:opacity-80"
+                                />
+                              </a>
+                            ) : (
+                              <span className="text-muted-foreground text-sm">-</span>
+                            )}
                           </TableCell>
                           <TableCell className="font-medium">{victim.full_name}</TableCell>
                           <TableCell>{victim.phone_number}</TableCell>
