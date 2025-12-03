@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Upload, MapPin } from "lucide-react";
+import { Loader2, Upload, MapPin, AlertTriangle, ShieldAlert } from "lucide-react";
 
 const districts = [
   "Ampara", "Anuradhapura", "Badulla", "Batticaloa", "Colombo",
@@ -55,6 +55,7 @@ export default function VictimRegistration() {
     longitude: null as number | null,
   });
   const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [acknowledged, setAcknowledged] = useState(false);
 
   const getGPSLocation = () => {
     if (!navigator.geolocation) {
@@ -83,6 +84,11 @@ export default function VictimRegistration() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!acknowledged) {
+      toast.error("Please acknowledge the privacy notice before submitting");
+      return;
+    }
     
     if (!formData.damage_type) {
       toast.error("Please select a damage type");
@@ -153,6 +159,51 @@ export default function VictimRegistration() {
             <p className="text-muted-foreground">
               Register your family to receive assistance for rebuilding your home.
             </p>
+          </div>
+
+          {/* Privacy Notice Section */}
+          <div className="mb-8 rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/20 p-6">
+            <div className="flex items-start gap-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900">
+                <ShieldAlert className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-amber-800 dark:text-amber-300 flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5" />
+                    Important Privacy Notice
+                  </h3>
+                  <div className="mt-3 space-y-3 text-sm text-amber-700 dark:text-amber-400">
+                    <p>
+                      <strong>Due to the emergency nature of this situation, all personal information submitted through this form (including name, phone number, and location) will be publicly visible to relief groups, volunteers, and anyone accessing this platform.</strong> This enables fast coordination during the crisis.
+                    </p>
+                    <p>
+                      <strong>If you do not want your details to be shared publicly, please do not submit this form.</strong>
+                    </p>
+                    <p>
+                      It is the sole responsibility of donors and volunteers to verify the authenticity of help requests before providing assistance. This platform serves only as a coordination tool and assumes no responsibility for any damages, losses, or outcomes arising from interactions facilitated through this service.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-3 pt-4 border-t border-amber-200 dark:border-amber-800">
+                  <Checkbox
+                    id="acknowledge"
+                    checked={acknowledged}
+                    onCheckedChange={(checked) => setAcknowledged(checked as boolean)}
+                    className="mt-1"
+                  />
+                  <div>
+                    <Label htmlFor="acknowledge" className="text-sm font-medium text-amber-800 dark:text-amber-300 cursor-pointer">
+                      I understand and acknowledge that my personal information will be publicly visible
+                    </Label>
+                    <p className="text-xs text-amber-600 dark:text-amber-500 mt-1">
+                      You must check this box to proceed with registration
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6 rounded-2xl border border-border bg-card p-8">
@@ -330,7 +381,7 @@ export default function VictimRegistration() {
               </div>
             </div>
 
-            <Button type="submit" className="w-full" size="lg" disabled={loading}>
+            <Button type="submit" className="w-full" size="lg" disabled={loading || !acknowledged}>
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -340,6 +391,12 @@ export default function VictimRegistration() {
                 "Submit Registration"
               )}
             </Button>
+            
+            {!acknowledged && (
+              <p className="text-center text-sm text-destructive">
+                Please acknowledge the privacy notice above to submit your registration
+              </p>
+            )}
           </form>
         </div>
       </div>
