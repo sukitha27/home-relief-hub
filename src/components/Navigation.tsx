@@ -8,7 +8,7 @@ const navItems = [
   { path: "/victim-registration", label: "Report Damage", icon: Home },
   { path: "/donor-registration", label: "Donate", icon: Heart },
   { path: "/volunteer-registration", label: "Volunteer", icon: Users },
-  { path: "/admin", label: "Admin", icon: Shield },
+  { path: "/auth", label: "Admin Login", icon: Shield },
 ];
 
 export function Navigation() {
