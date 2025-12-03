@@ -18,6 +18,7 @@ interface Victim {
   essential_needs: string[] | null;
   latitude: number | null;
   longitude: number | null;
+  photo_url: string | null;
 }
 
 interface Donor {
@@ -50,7 +51,7 @@ export function PublicListings() {
       const [victimsRes, donorsRes] = await Promise.all([
         supabase
           .from("victims")
-          .select("id, full_name, district, ds_division, gn_division, phone_number, damage_type, family_members, essential_needs, latitude, longitude")
+          .select("id, full_name, district, ds_division, gn_division, phone_number, damage_type, family_members, essential_needs, latitude, longitude, photo_url")
           .eq("verified", true)
           .order("created_at", { ascending: false })
           .limit(6),
@@ -102,7 +103,16 @@ export function PublicListings() {
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {victims.map((victim) => (
-                <Card key={victim.id} className="border-border hover:border-primary/30 transition-colors">
+              <Card key={victim.id} className="border-border hover:border-primary/30 transition-colors overflow-hidden">
+                  {victim.photo_url && (
+                    <div className="w-full h-40 overflow-hidden">
+                      <img 
+                        src={victim.photo_url} 
+                        alt={`Damage photo for ${victim.full_name}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
                       <CardTitle className="text-lg">{victim.full_name}</CardTitle>
