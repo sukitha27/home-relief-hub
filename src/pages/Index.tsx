@@ -1,10 +1,11 @@
 import { Link } from "react-router-dom";
-import { Home, Heart, Users, ArrowRight, MapPin } from "lucide-react";
+import { Home, Heart, Users, ArrowRight, MapPin, Mail, Phone, Shield } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { PublicListings } from "@/components/home/PublicListings";
 import { StatsSection } from "@/components/home/StatsSection";
+import { ExternalLink } from "lucide-react";
 
 const actions = [
   {
@@ -67,7 +68,7 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Stats Section - NEW */}
+      {/* Stats Section */}
       <StatsSection />
 
       {/* Actions Section */}
@@ -109,12 +110,125 @@ export default function Index() {
       {/* Public Listings */}
       <PublicListings />
 
-      {/* Footer */}
-      <footer className="border-t border-border bg-muted/50 py-8">
-        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>© 2025 HomeRelief Sri Lanka. Together we rebuild.</p>
+      {/* Enhanced Footer */}
+<footer className="border-t border-border bg-card">
+  <div className="container mx-auto px-4 py-12">
+    <div className="grid gap-8 md:grid-cols-4">
+      {/* Brand Section */}
+      <div className="md:col-span-2">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary">
+            <Home className="h-6 w-6 text-primary-foreground" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">HomeRelief Sri Lanka</h2>
+            <p className="text-sm text-muted-foreground">Rebuilding hope, one home at a time</p>
+          </div>
         </div>
-      </footer>
+        <p className="text-muted-foreground max-w-lg">
+          Connecting disaster-affected families with donors and volunteers 
+          who want to help rebuild homes and restore hope across Sri Lanka.
+        </p>
+      </div>
+
+      {/* Quick Links */}
+      <div>
+        <h3 className="text-lg font-semibold mb-4 text-foreground">Quick Links</h3>
+        <ul className="space-y-3">
+          <li>
+            <Link to="/victim-registration" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2">
+              <Home className="h-4 w-4" />
+              Need Help
+            </Link>
+          </li>
+          <li>
+            <Link to="/donor-registration" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2">
+              <Heart className="h-4 w-4" />
+              Donate
+            </Link>
+          </li>
+          <li>
+            <Link to="/volunteer-registration" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Volunteer
+            </Link>
+          </li>
+          <li>
+            <Link to="/public-listings" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              View Projects
+            </Link>
+          </li>
+          {/* New External Links */}
+          <li>
+            <a 
+              href="https://aid.floodsupport.org/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2"
+            >
+              <ExternalLink className="h-4 w-4" />
+              Flood Support Aid
+            </a>
+          </li>
+          <li>
+            <a 
+              href="https://floodsupport.org/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2"
+            >
+              <ExternalLink className="h-4 w-4" />
+              Flood Support Portal
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      {/* Contact */}
+      <div>
+        <h3 className="text-lg font-semibold mb-4 text-foreground">Contact</h3>
+        <ul className="space-y-4">
+          <li>
+            <a href="mailto:help@homerelief.lk" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2">
+              <Mail className="h-4 w-4" />
+              help@homerelief.lk
+            </a>
+          </li>
+          <li>
+            <a href="tel:+94761148054" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2">
+              <Phone className="h-4 w-4" />
+              +94 761148054
+            </a>
+          </li>
+        </ul>
+        
+        <div className="mt-8 pt-6 border-t border-border">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <Heart className="h-5 w-5 text-primary" />
+            </div>
+            <span className="text-sm font-medium text-foreground">Made with ❤️ for Sri Lanka</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Copyright */}
+    <div className="mt-12 pt-8 border-t border-border">
+      <div className="flex flex-col md:flex-row justify-between items-center">
+        <p className="text-sm text-muted-foreground">
+          © 2025 HomeRelief Sri Lanka. All rights reserved.
+        </p>
+        <div className="mt-4 md:mt-0">
+          <Badge variant="outline" className="px-3 py-1">
+            Serving all 25 districts
+          </Badge>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
     </Layout>
   );
 }
