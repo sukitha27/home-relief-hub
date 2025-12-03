@@ -33,6 +33,7 @@ const actions = [
 ];
 
 export default function Index() {
+  
   return (
     <Layout>
       {/* Hero Section */}
