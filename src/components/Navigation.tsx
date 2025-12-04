@@ -67,6 +67,10 @@ export function Navigation() {
               <div className="h-9 w-9 rounded-lg bg-primary/20"></div>
               <div className="h-6 w-32 rounded bg-foreground/10"></div>
             </div>
+            <div className="flex items-center gap-2">
+              <div className="h-10 w-10 rounded-lg bg-foreground/10"></div>
+              <div className="h-10 w-10 rounded-lg bg-foreground/10"></div>
+            </div>
           </div>
         </div>
       </nav>
@@ -85,15 +89,15 @@ export function Navigation() {
           </Link>
 
           <div className="flex items-center gap-2 md:gap-4">
-            {/* Language Toggle - Desktop */}
-            <div className="hidden md:block">
+            {/* Language Toggle - Always Visible */}
+            <div className="flex items-center">
               <LanguageToggle />
             </div>
 
-            {/* Theme Toggle - Desktop */}
+            {/* Theme Toggle - Always Visible */}
             <button
               onClick={toggleTheme}
-              className="hidden md:flex items-center justify-center h-10 w-10 rounded-lg hover:bg-muted transition-colors duration-200"
+              className="flex items-center justify-center h-10 w-10 rounded-lg hover:bg-muted transition-colors duration-200"
               aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
             >
               <div className="relative h-5 w-5">
@@ -146,34 +150,9 @@ export function Navigation() {
           </div>
         </div>
 
-        {/* Mobile Navigation */}
+        {/* Mobile Navigation - Only contains menu items, NOT toggles */}
         {mobileOpen && (
           <div className="md:hidden pb-4 animate-fade-in">
-            {/* Theme Toggle - Mobile */}
-            {/* Language Toggle - Mobile */}
-            <div className="px-4 py-2 mb-2">
-              <LanguageToggle />
-            </div>
-
-            <button
-              onClick={toggleTheme}
-              className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors mb-2"
-            >
-              <div className="flex items-center gap-3">
-                {theme === "light" ? (
-                  <>
-                    <Moon className="h-5 w-5" />
-                    {t("nav.switchToDark")}
-                  </>
-                ) : (
-                  <>
-                    <Sun className="h-5 w-5" />
-                    {t("nav.switchToLight")}
-                  </>
-                )}
-              </div>
-            </button>
-
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
