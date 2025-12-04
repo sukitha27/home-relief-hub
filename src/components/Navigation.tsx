@@ -1,21 +1,26 @@
 import { Link, useLocation } from "react-router-dom";
 import { Home, Heart, Users, Shield, Menu, X, Sun, Moon } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
+import { LanguageToggle } from "./LanguageToggle";
 
-const navItems = [
-  { path: "/", label: "Home", icon: Home },
-  { path: "/victim-registration", label: "Report Damage", icon: Home },
-  { path: "/donor-registration", label: "Donate", icon: Heart },
-  { path: "/volunteer-registration", label: "Volunteer", icon: Users },
-  { path: "/auth", label: "Admin Login", icon: Shield },
+const getNavItems = (t: (key: string) => string) => [
+  { path: "/", label: t("nav.home"), icon: Home },
+  { path: "/victim-registration", label: t("nav.reportDamage"), icon: Home },
+  { path: "/donor-registration", label: t("nav.donate"), icon: Heart },
+  { path: "/volunteer-registration", label: t("nav.volunteer"), icon: Users },
+  { path: "/auth", label: t("nav.adminLogin"), icon: Shield },
 ];
 
 export function Navigation() {
   const location = useLocation();
+  const { t } = useTranslation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">("light");
+  
+  const navItems = getNavItems(t);
 
   // Initialize theme from localStorage or system preference
   useEffect(() => {
@@ -79,7 +84,12 @@ export function Navigation() {
             <span className="text-xl font-bold text-foreground">HomeRelief</span>
           </Link>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4">
+            {/* Language Toggle - Desktop */}
+            <div className="hidden md:block">
+              <LanguageToggle />
+            </div>
+
             {/* Theme Toggle - Desktop */}
             <button
               onClick={toggleTheme}
@@ -140,6 +150,11 @@ export function Navigation() {
         {mobileOpen && (
           <div className="md:hidden pb-4 animate-fade-in">
             {/* Theme Toggle - Mobile */}
+            {/* Language Toggle - Mobile */}
+            <div className="px-4 py-2 mb-2">
+              <LanguageToggle />
+            </div>
+
             <button
               onClick={toggleTheme}
               className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors mb-2"
@@ -148,12 +163,12 @@ export function Navigation() {
                 {theme === "light" ? (
                   <>
                     <Moon className="h-5 w-5" />
-                    Switch to Dark Mode
+                    {t("nav.switchToDark")}
                   </>
                 ) : (
                   <>
                     <Sun className="h-5 w-5" />
-                    Switch to Light Mode
+                    {t("nav.switchToLight")}
                   </>
                 )}
               </div>
