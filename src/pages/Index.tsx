@@ -201,9 +201,9 @@ export default function Index() {
               <h3 className="text-lg font-semibold mb-4 text-foreground">{t("footer.contact")}</h3>
               <ul className="space-y-4">
                 <li>
-                  <a href="mailto:help@homerelief.lk" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2">
+                  <a href="mailto:help@homerelieflk.org" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2">
                     <Mail className="h-4 w-4" />
-                    help@homerelief.lk
+                    help@homerelieflk.org
                   </a>
                 </li>
                 <li>
