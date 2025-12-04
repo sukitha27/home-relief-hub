@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Users, Heart, Home, Hammer } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,6 +12,7 @@ interface StatsData {
 }
 
 export function StatsSection() {
+  const { t } = useTranslation();
   const [stats, setStats] = useState<StatsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -94,28 +96,28 @@ export function StatsSection() {
 
   const statItems = [
     {
-      title: "Families Helped",
+      title: t("stats.familiesHelped"),
       value: stats?.totalFamilies || 0,
       icon: Users,
       color: "bg-blue-500/10 text-blue-600",
       iconColor: "text-blue-600",
     },
     {
-      title: "Volunteers",
+      title: t("stats.volunteersActive"),
       value: stats?.totalVolunteers || 0,
       icon: Hammer,
       color: "bg-green-500/10 text-green-600",
       iconColor: "text-green-600",
     },
     {
-      title: "Donors",
+      title: t("stats.donorsContributed"),
       value: stats?.totalDonors || 0,
       icon: Heart,
       color: "bg-orange-500/10 text-orange-600",
       iconColor: "text-orange-600",
     },
     {
-      title: "Active Projects",
+      title: t("stats.areasServed"),
       value: 0,
       icon: Home,
       color: "bg-purple-500/10 text-purple-600",
@@ -140,7 +142,7 @@ export function StatsSection() {
       <div className="container mx-auto px-4">
         <div className="mx-auto max-w-6xl">
           <h2 className="mb-12 text-center text-3xl font-bold text-foreground">
-            Our Impact in Numbers
+            {t("howItWorks.title")}
           </h2>
           
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">

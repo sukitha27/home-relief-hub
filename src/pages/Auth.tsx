@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,7 @@ const authSchema = z.object({
 
 export default function Auth() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user, signIn, signUp, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
@@ -47,7 +49,7 @@ export default function Auth() {
         toast.error(error.message);
       }
     } else {
-      toast.success("Signed in successfully");
+      toast.success(t("auth.signInSuccess"));
       navigate("/admin");
     }
   };
@@ -71,7 +73,7 @@ export default function Auth() {
         toast.error(error.message);
       }
     } else {
-      toast.success("Account created! Please contact an admin to get access.");
+      toast.success(t("auth.signUpSuccess"));
     }
   };
 
@@ -93,7 +95,7 @@ export default function Auth() {
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
               <Shield className="h-8 w-8 text-primary" />
             </div>
-            <h1 className="mb-2 text-3xl font-bold text-foreground">Admin Access</h1>
+            <h1 className="mb-2 text-3xl font-bold text-foreground">{t("auth.adminLogin")}</h1>
             <p className="text-muted-foreground">
               Sign in to access the admin dashboard
             </p>
@@ -102,14 +104,14 @@ export default function Auth() {
           <div className="rounded-2xl border border-border bg-card p-8">
             <Tabs defaultValue="signin" className="space-y-6">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="signin">Sign In</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                <TabsTrigger value="signin">{t("auth.signIn")}</TabsTrigger>
+                <TabsTrigger value="signup">{t("auth.signUp")}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="signin">
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signin-email">Email</Label>
+                    <Label htmlFor="signin-email">{t("auth.email")}</Label>
                     <Input
                       id="signin-email"
                       type="email"
@@ -120,7 +122,7 @@ export default function Auth() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signin-password">Password</Label>
+                    <Label htmlFor="signin-password">{t("auth.password")}</Label>
                     <Input
                       id="signin-password"
                       type="password"
@@ -134,10 +136,10 @@ export default function Auth() {
                     {loading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Signing in...
+                        {t("auth.signingIn")}
                       </>
                     ) : (
-                      "Sign In"
+                      t("auth.signInButton")
                     )}
                   </Button>
                 </form>
@@ -146,7 +148,7 @@ export default function Auth() {
               <TabsContent value="signup">
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
+                    <Label htmlFor="signup-email">{t("auth.email")}</Label>
                     <Input
                       id="signup-email"
                       type="email"
@@ -157,7 +159,7 @@ export default function Auth() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
+                    <Label htmlFor="signup-password">{t("auth.password")}</Label>
                     <Input
                       id="signup-password"
                       type="password"
@@ -171,10 +173,10 @@ export default function Auth() {
                     {loading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Creating account...
+                        {t("auth.signingUp")}
                       </>
                     ) : (
-                      "Create Account"
+                      t("auth.signUpButton")
                     )}
                   </Button>
                   <p className="text-xs text-center text-muted-foreground">

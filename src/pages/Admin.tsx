@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Home, Heart, Users, RefreshCw, Check, X, MapPin, LogOut, TrendingUp, ShieldCheck, Clock } from "lucide-react";
+import { Loader2, Home, Heart, Users, RefreshCw, Check, X, MapPin, LogOut, ShieldCheck, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
@@ -64,6 +65,7 @@ const supportColors: Record<string, string> = {
 
 export default function Admin() {
   const { user, signOut } = useAuth();
+  const { t } = useTranslation();
   const [victims, setVictims] = useState<Victim[]>([]);
   const [donors, setDonors] = useState<Donor[]>([]);
   const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
@@ -99,9 +101,9 @@ export default function Admin() {
       .eq("id", id);
 
     if (error) {
-      toast.error("Failed to update verification status");
+      toast.error(t("admin.verifyError"));
     } else {
-      toast.success(verified ? "Victim verified" : "Verification removed");
+      toast.success(verified ? t("admin.verifySuccess") : t("admin.unverifySuccess"));
       setVictims((prev) =>
         prev.map((v) => (v.id === id ? { ...v, verified } : v))
       );
@@ -115,9 +117,9 @@ export default function Admin() {
       .eq("id", id);
 
     if (error) {
-      toast.error("Failed to update verification status");
+      toast.error(t("admin.verifyError"));
     } else {
-      toast.success(verified ? "Donor verified" : "Verification removed");
+      toast.success(verified ? t("admin.verifySuccess") : t("admin.unverifySuccess"));
       setDonors((prev) =>
         prev.map((d) => (d.id === id ? { ...d, verified } : d))
       );
@@ -133,8 +135,8 @@ export default function Admin() {
       <div className="container mx-auto px-4 py-12">
         <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
-            <p className="text-muted-foreground">Manage registrations and verifications</p>
+            <h1 className="text-3xl font-bold text-foreground">{t("admin.title")}</h1>
+            <p className="text-muted-foreground">{t("admin.analytics")}</p>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             <span className="text-sm text-muted-foreground">{user?.email}</span>
@@ -155,14 +157,14 @@ export default function Admin() {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <Home className="h-4 w-4" />
-                Total Victims
+                {t("admin.totalVictims")}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{victims.length}</div>
               <p className="text-xs text-muted-foreground">
                 <ShieldCheck className="h-3 w-3 inline mr-1" />
-                {victims.filter(v => v.verified).length} verified
+                {victims.filter(v => v.verified).length} {t("admin.verified")}
               </p>
             </CardContent>
           </Card>
@@ -171,14 +173,14 @@ export default function Admin() {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <Heart className="h-4 w-4" />
-                Total Donors
+                {t("admin.totalDonors")}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{donors.length}</div>
               <p className="text-xs text-muted-foreground">
                 <ShieldCheck className="h-3 w-3 inline mr-1" />
-                {donors.filter(d => d.verified).length} verified
+                {donors.filter(d => d.verified).length} {t("admin.verified")}
               </p>
             </CardContent>
           </Card>
@@ -187,13 +189,13 @@ export default function Admin() {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <Users className="h-4 w-4" />
-                Total Volunteers
+                {t("admin.totalVolunteers")}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{volunteers.length}</div>
               <p className="text-xs text-muted-foreground">
-                {volunteers.reduce((acc, v) => acc + v.skills.length, 0)} skills registered
+                {volunteers.reduce((acc, v) => acc + v.skills.length, 0)} {t("admin.skills")}
               </p>
             </CardContent>
           </Card>
@@ -202,7 +204,7 @@ export default function Admin() {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <Clock className="h-4 w-4" />
-                Pending Review
+                {t("admin.pending")}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -225,15 +227,15 @@ export default function Admin() {
             <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-grid">
               <TabsTrigger value="victims" className="gap-2">
                 <Home className="h-4 w-4" />
-                Victims ({victims.length})
+                {t("admin.victims")} ({victims.length})
               </TabsTrigger>
               <TabsTrigger value="donors" className="gap-2">
                 <Heart className="h-4 w-4" />
-                Donors ({donors.length})
+                {t("admin.donors")} ({donors.length})
               </TabsTrigger>
               <TabsTrigger value="volunteers" className="gap-2">
                 <Users className="h-4 w-4" />
-                Volunteers ({volunteers.length})
+                {t("admin.volunteers")} ({volunteers.length})
               </TabsTrigger>
             </TabsList>
 
@@ -242,23 +244,23 @@ export default function Admin() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Photo</TableHead>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Phone</TableHead>
-                      <TableHead>Location</TableHead>
-                      <TableHead>GPS</TableHead>
-                      <TableHead>Damage</TableHead>
-                      <TableHead>Family</TableHead>
+                      <TableHead>{t("admin.status")}</TableHead>
+                      <TableHead>{t("admin.photo")}</TableHead>
+                      <TableHead>{t("admin.name")}</TableHead>
+                      <TableHead>{t("admin.phone")}</TableHead>
+                      <TableHead>{t("admin.location")}</TableHead>
+                      <TableHead>{t("admin.gps")}</TableHead>
+                      <TableHead>{t("admin.damage")}</TableHead>
+                      <TableHead>{t("admin.family")}</TableHead>
                       <TableHead>Date</TableHead>
-                      <TableHead>Actions</TableHead>
+                      <TableHead>{t("admin.actions")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {victims.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
-                          No victims registered yet
+                          {t("admin.noVictims")}
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -266,7 +268,7 @@ export default function Admin() {
                         <TableRow key={victim.id}>
                           <TableCell>
                             <Badge variant={victim.verified ? "default" : "secondary"}>
-                              {victim.verified ? "Verified" : "Pending"}
+                              {victim.verified ? t("admin.verifiedBadge") : t("admin.pendingBadge")}
                             </Badge>
                           </TableCell>
                           <TableCell>
@@ -295,7 +297,7 @@ export default function Admin() {
                                 onClick={() => openGoogleMaps(victim.latitude!, victim.longitude!)}
                               >
                                 <MapPin className="h-4 w-4 mr-1" />
-                                View
+                                {t("common.view")}
                               </Button>
                             ) : (
                               <span className="text-muted-foreground text-sm">-</span>
@@ -318,7 +320,7 @@ export default function Admin() {
                                 onClick={() => verifyVictim(victim.id, false)}
                               >
                                 <X className="h-4 w-4 mr-1" />
-                                Unverify
+                                {t("admin.unverify")}
                               </Button>
                             ) : (
                               <Button
@@ -327,7 +329,7 @@ export default function Admin() {
                                 onClick={() => verifyVictim(victim.id, true)}
                               >
                                 <Check className="h-4 w-4 mr-1" />
-                                Verify
+                                {t("admin.verify")}
                               </Button>
                             )}
                           </TableCell>
@@ -344,20 +346,20 @@ export default function Admin() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Contact</TableHead>
-                      <TableHead>Support Type</TableHead>
-                      <TableHead>Description</TableHead>
+                      <TableHead>{t("admin.status")}</TableHead>
+                      <TableHead>{t("admin.name")}</TableHead>
+                      <TableHead>{t("publicListings.contact")}</TableHead>
+                      <TableHead>{t("admin.supportType")}</TableHead>
+                      <TableHead>{t("admin.description")}</TableHead>
                       <TableHead>Date</TableHead>
-                      <TableHead>Actions</TableHead>
+                      <TableHead>{t("admin.actions")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {donors.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                          No donors registered yet
+                          {t("admin.noDonors")}
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -365,7 +367,7 @@ export default function Admin() {
                         <TableRow key={donor.id}>
                           <TableCell>
                             <Badge variant={donor.verified ? "default" : "secondary"}>
-                              {donor.verified ? "Verified" : "Pending"}
+                              {donor.verified ? t("admin.verifiedBadge") : t("admin.pendingBadge")}
                             </Badge>
                           </TableCell>
                           <TableCell className="font-medium">{donor.name}</TableCell>
@@ -392,7 +394,7 @@ export default function Admin() {
                                 onClick={() => verifyDonor(donor.id, false)}
                               >
                                 <X className="h-4 w-4 mr-1" />
-                                Unverify
+                                {t("admin.unverify")}
                               </Button>
                             ) : (
                               <Button
@@ -401,7 +403,7 @@ export default function Admin() {
                                 onClick={() => verifyDonor(donor.id, true)}
                               >
                                 <Check className="h-4 w-4 mr-1" />
-                                Verify
+                                {t("admin.verify")}
                               </Button>
                             )}
                           </TableCell>
@@ -418,10 +420,10 @@ export default function Admin() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Phone</TableHead>
-                      <TableHead>Skills</TableHead>
-                      <TableHead>Availability</TableHead>
+                      <TableHead>{t("admin.name")}</TableHead>
+                      <TableHead>{t("admin.phone")}</TableHead>
+                      <TableHead>{t("admin.skills")}</TableHead>
+                      <TableHead>{t("admin.availability")}</TableHead>
                       <TableHead>Date</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -429,7 +431,7 @@ export default function Admin() {
                     {volunteers.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                          No volunteers registered yet
+                          {t("admin.noVolunteers")}
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -448,11 +450,8 @@ export default function Admin() {
                           </TableCell>
                           <TableCell className="text-sm">
                             {volunteer.availability_start && volunteer.availability_end
-                              ? `${format(new Date(volunteer.availability_start), "MMM d")} - ${format(
-                                  new Date(volunteer.availability_end),
-                                  "MMM d"
-                                )}`
-                              : "Flexible"}
+                              ? `${format(new Date(volunteer.availability_start), "MMM d")} - ${format(new Date(volunteer.availability_end), "MMM d")}`
+                              : "-"}
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground">
                             {format(new Date(volunteer.created_at), "MMM d, yyyy")}

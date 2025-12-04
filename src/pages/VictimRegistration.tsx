@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,13 +19,6 @@ const districts = [
   "Polonnaruwa", "Puttalam", "Ratnapura", "Trincomalee", "Vavuniya"
 ];
 
-const damageTypes = [
-  { value: "minor", label: "Minor Damage" },
-  { value: "partial", label: "Partial Damage" },
-  { value: "severe", label: "Severe Damage" },
-  { value: "total_loss", label: "Total Loss" },
-];
-
 const needsOptions = [
   "Roof sheets",
   "Cement",
@@ -40,6 +34,7 @@ type DamageType = "minor" | "partial" | "severe" | "total_loss";
 
 export default function VictimRegistration() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [gettingLocation, setGettingLocation] = useState(false);
   const [formData, setFormData] = useState({
@@ -57,6 +52,13 @@ export default function VictimRegistration() {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [acknowledged, setAcknowledged] = useState(false);
 
+  const damageTypes = [
+    { value: "minor", label: t("victimForm.minor") },
+    { value: "partial", label: t("victimForm.partial") },
+    { value: "severe", label: t("victimForm.severe") },
+    { value: "total_loss", label: t("victimForm.totalLoss") },
+  ];
+
   const getGPSLocation = () => {
     if (!navigator.geolocation) {
       toast.error("Geolocation is not supported by your browser");
@@ -71,7 +73,7 @@ export default function VictimRegistration() {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
         }));
-        toast.success("Location captured successfully");
+        toast.success(t("victimForm.locationCaptured"));
         setGettingLocation(false);
       },
       (error) => {
@@ -91,7 +93,7 @@ export default function VictimRegistration() {
     }
     
     if (!formData.damage_type) {
-      toast.error("Please select a damage type");
+      toast.error(t("victimForm.selectDamageType"));
       return;
     }
 
@@ -132,10 +134,10 @@ export default function VictimRegistration() {
 
       if (error) throw error;
 
-      toast.success("Registration successful! We'll connect you with help soon.");
+      toast.success(t("victimForm.successMessage"));
       navigate("/");
     } catch (error: any) {
-      toast.error(error.message || "Failed to submit registration");
+      toast.error(error.message || t("victimForm.errorMessage"));
     } finally {
       setLoading(false);
     }
@@ -155,9 +157,9 @@ export default function VictimRegistration() {
       <div className="container mx-auto px-4 py-12">
         <div className="mx-auto max-w-2xl">
           <div className="mb-8 text-center">
-            <h1 className="mb-2 text-3xl font-bold text-foreground">Report Home Damage</h1>
+            <h1 className="mb-2 text-3xl font-bold text-foreground">{t("victimForm.title")}</h1>
             <p className="text-muted-foreground">
-              Register your family to receive assistance for rebuilding your home.
+              {t("victimForm.subtitle")}
             </p>
           </div>
 
@@ -209,18 +211,18 @@ export default function VictimRegistration() {
           <form onSubmit={handleSubmit} className="space-y-6 rounded-2xl border border-border bg-card p-8">
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="full_name">Full Name *</Label>
+                <Label htmlFor="full_name">{t("victimForm.fullName")} *</Label>
                 <Input
                   id="full_name"
                   required
                   value={formData.full_name}
                   onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                  placeholder="Enter your full name"
+                  placeholder={t("victimForm.fullNamePlaceholder")}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone_number">Phone Number *</Label>
+                <Label htmlFor="phone_number">{t("victimForm.phoneNumber")} *</Label>
                 <Input
                   id="phone_number"
                   type="tel"
@@ -234,13 +236,13 @@ export default function VictimRegistration() {
 
             <div className="grid gap-6 md:grid-cols-3">
               <div className="space-y-2">
-                <Label htmlFor="district">District *</Label>
+                <Label htmlFor="district">{t("victimForm.district")} *</Label>
                 <Select
                   value={formData.district}
                   onValueChange={(value) => setFormData({ ...formData, district: value })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select district" />
+                    <SelectValue placeholder={t("victimForm.selectDistrict")} />
                   </SelectTrigger>
                   <SelectContent>
                     {districts.map((district) => (
@@ -253,37 +255,37 @@ export default function VictimRegistration() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="ds_division">DS Division *</Label>
+                <Label htmlFor="ds_division">{t("victimForm.dsDivision")} *</Label>
                 <Input
                   id="ds_division"
                   required
                   value={formData.ds_division}
                   onChange={(e) => setFormData({ ...formData, ds_division: e.target.value })}
-                  placeholder="Divisional Secretariat"
+                  placeholder={t("victimForm.dsDivisionPlaceholder")}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="gn_division">GN Division *</Label>
+                <Label htmlFor="gn_division">{t("victimForm.gnDivision")} *</Label>
                 <Input
                   id="gn_division"
                   required
                   value={formData.gn_division}
                   onChange={(e) => setFormData({ ...formData, gn_division: e.target.value })}
-                  placeholder="Grama Niladhari"
+                  placeholder={t("victimForm.gnDivisionPlaceholder")}
                 />
               </div>
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="damage_type">Type of Damage *</Label>
+                <Label htmlFor="damage_type">{t("victimForm.damageType")} *</Label>
                 <Select
                   value={formData.damage_type}
                   onValueChange={(value: DamageType) => setFormData({ ...formData, damage_type: value })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select damage type" />
+                    <SelectValue placeholder={t("victimForm.selectDamageType")} />
                   </SelectTrigger>
                   <SelectContent>
                     {damageTypes.map((type) => (
@@ -296,7 +298,7 @@ export default function VictimRegistration() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="family_members">Family Members *</Label>
+                <Label htmlFor="family_members">{t("victimForm.familyMembers")} *</Label>
                 <Input
                   id="family_members"
                   type="number"
@@ -309,7 +311,7 @@ export default function VictimRegistration() {
             </div>
 
             <div className="space-y-3">
-              <Label>Essential Needs</Label>
+              <Label>{t("victimForm.essentialNeeds")}</Label>
               <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                 {needsOptions.map((need) => (
                   <div key={need} className="flex items-center space-x-2">
@@ -328,7 +330,8 @@ export default function VictimRegistration() {
 
             {/* GPS Location */}
             <div className="space-y-2">
-              <Label>GPS Location (for verification)</Label>
+              <Label>{t("victimForm.gpsLocation")}</Label>
+              <p className="text-sm text-muted-foreground">{t("victimForm.gpsHelp")}</p>
               <div className="flex items-center gap-4">
                 <Button
                   type="button"
@@ -339,19 +342,19 @@ export default function VictimRegistration() {
                   {gettingLocation ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Getting location...
+                      {t("victimForm.gettingLocation")}
                     </>
                   ) : (
                     <>
                       <MapPin className="mr-2 h-4 w-4" />
-                      Capture My Location
+                      {t("victimForm.getLocation")}
                     </>
                   )}
                 </Button>
                 {formData.latitude && formData.longitude && (
                   <span className="text-sm text-success flex items-center gap-1">
                     <MapPin className="h-4 w-4" />
-                    Location captured
+                    {t("victimForm.locationCaptured")}
                   </span>
                 )}
               </div>
@@ -363,7 +366,7 @@ export default function VictimRegistration() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="photo">Photo of Damage (optional)</Label>
+              <Label htmlFor="photo">{t("victimForm.propertyPhoto")}</Label>
               <div className="flex items-center gap-4">
                 <Input
                   id="photo"
@@ -385,10 +388,10 @@ export default function VictimRegistration() {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Submitting...
+                  {t("victimForm.submitting")}
                 </>
               ) : (
-                "Submit Registration"
+                t("victimForm.submitReport")
               )}
             </Button>
             

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,18 +10,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Users } from "lucide-react";
 
-const skillsOptions = [
-  { value: "carpentry", label: "Carpentry" },
-  { value: "electrical", label: "Electrical Work" },
-  { value: "plumbing", label: "Plumbing" },
-  { value: "masonry", label: "Masonry" },
-  { value: "general", label: "General Labour" },
-];
-
 type VolunteerSkill = "carpentry" | "electrical" | "plumbing" | "masonry" | "general";
 
 export default function VolunteerRegistration() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     full_name: "",
@@ -29,6 +23,14 @@ export default function VolunteerRegistration() {
     availability_start: "",
     availability_end: "",
   });
+
+  const skillsOptions = [
+    { value: "carpentry", label: t("volunteerForm.carpentry") },
+    { value: "electrical", label: t("volunteerForm.electrical") },
+    { value: "plumbing", label: t("volunteerForm.plumbing") },
+    { value: "masonry", label: t("volunteerForm.masonry") },
+    { value: "general", label: t("volunteerForm.general") },
+  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,10 +53,10 @@ export default function VolunteerRegistration() {
 
       if (error) throw error;
 
-      toast.success("Thank you for volunteering! We'll contact you when help is needed.");
+      toast.success(t("volunteerForm.successMessage"));
       navigate("/");
     } catch (error: any) {
-      toast.error(error.message || "Failed to submit registration");
+      toast.error(error.message || t("volunteerForm.errorMessage"));
     } finally {
       setLoading(false);
     }
@@ -85,40 +87,40 @@ export default function VolunteerRegistration() {
             <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
               <Users className="h-8 w-8 text-primary" />
             </div>
-            <h1 className="mb-2 text-3xl font-bold text-foreground">Volunteer Registration</h1>
+            <h1 className="mb-2 text-3xl font-bold text-foreground">{t("volunteerForm.title")}</h1>
             <p className="text-muted-foreground">
-              Share your skills to help families rebuild their homes.
+              {t("volunteerForm.subtitle")}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6 rounded-2xl border border-border bg-card p-8">
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="full_name">Full Name *</Label>
+                <Label htmlFor="full_name">{t("volunteerForm.fullName")} *</Label>
                 <Input
                   id="full_name"
                   required
                   value={formData.full_name}
                   onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                  placeholder="Enter your full name"
+                  placeholder={t("volunteerForm.fullNamePlaceholder")}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone_number">Phone Number *</Label>
+                <Label htmlFor="phone_number">{t("volunteerForm.phoneNumber")} *</Label>
                 <Input
                   id="phone_number"
                   type="tel"
                   required
                   value={formData.phone_number}
                   onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
-                  placeholder="07X XXX XXXX"
+                  placeholder={t("volunteerForm.phoneNumberPlaceholder")}
                 />
               </div>
             </div>
 
             <div className="space-y-3">
-              <Label>Skills *</Label>
+              <Label>{t("volunteerForm.skills")} *</Label>
               <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
                 {skillsOptions.map((skill) => (
                   <div
@@ -148,11 +150,11 @@ export default function VolunteerRegistration() {
             </div>
 
             <div className="space-y-3">
-              <Label>Availability (optional)</Label>
+              <Label>{t("volunteerForm.availability")}</Label>
               <div className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="availability_start" className="text-sm text-muted-foreground">
-                    From
+                    {t("volunteerForm.availabilityStart")}
                   </Label>
                   <Input
                     id="availability_start"
@@ -164,7 +166,7 @@ export default function VolunteerRegistration() {
 
                 <div className="space-y-2">
                   <Label htmlFor="availability_end" className="text-sm text-muted-foreground">
-                    To
+                    {t("volunteerForm.availabilityEnd")}
                   </Label>
                   <Input
                     id="availability_end"
@@ -180,10 +182,10 @@ export default function VolunteerRegistration() {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Submitting...
+                  {t("volunteerForm.submitting")}
                 </>
               ) : (
-                "Register as Volunteer"
+                t("volunteerForm.submitRegistration")
               )}
             </Button>
           </form>
