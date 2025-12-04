@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,6 +43,7 @@ const supportColors: Record<string, string> = {
 };
 
 export function PublicListings() {
+  const { t } = useTranslation();
   const [victims, setVictims] = useState<Victim[]>([]);
   const [donors, setDonors] = useState<Donor[]>([]);
   const [loading, setLoading] = useState(true);
@@ -93,13 +95,13 @@ export function PublicListings() {
               <AlertTriangle className="h-5 w-5 text-destructive" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-foreground">Families Needing Help</h2>
-              <p className="text-muted-foreground">Verified disaster-affected families</p>
+              <h2 className="text-2xl font-bold text-foreground">{t("publicListings.verifiedVictims")}</h2>
+              <p className="text-muted-foreground">{t("publicListings.verifiedVictimsDesc")}</p>
             </div>
           </div>
 
           {victims.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">No verified victims yet.</p>
+            <p className="text-center text-muted-foreground py-8">{t("publicListings.noVerifiedVictims")}</p>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {victims.map((victim) => (
@@ -152,14 +154,14 @@ export function PublicListings() {
                         onClick={() => openGoogleMaps(victim.latitude!, victim.longitude!)}
                       >
                         <Navigation className="h-4 w-4 mr-2" />
-                        Open in Google Maps
+                        {t("publicListings.viewLocation")}
                       </Button>
                     )}
 
                     {/* Family Members */}
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Users className="h-4 w-4" />
-                      {victim.family_members} family member{victim.family_members > 1 ? "s" : ""}
+                      {victim.family_members} {t("publicListings.familyMembers")}
                     </div>
 
                     {/* Essential Needs */}
@@ -191,13 +193,13 @@ export function PublicListings() {
               <Heart className="h-5 w-5 text-secondary" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-foreground">Generous Donors</h2>
-              <p className="text-muted-foreground">Verified supporters offering help</p>
+              <h2 className="text-2xl font-bold text-foreground">{t("publicListings.verifiedDonors")}</h2>
+              <p className="text-muted-foreground">{t("publicListings.verifiedDonorsDesc")}</p>
             </div>
           </div>
 
           {donors.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">No verified donors yet.</p>
+            <p className="text-center text-muted-foreground py-8">{t("publicListings.noVerifiedDonors")}</p>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {donors.map((donor) => (
