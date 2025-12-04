@@ -32,6 +32,13 @@ import {
   Clock,
   Search as SearchIcon,
   Download,
+  MoreVertical,
+  Phone,
+  Calendar,
+  Eye,
+  Filter,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -42,6 +49,12 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import Papa from "papaparse";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 /**
  * Upgraded Admin dashboard for victims management
@@ -76,10 +89,10 @@ interface Victim {
 }
 
 const damageColors: Record<string, string> = {
-  minor: "bg-success/20 text-success",
-  partial: "bg-warning/20 text-warning",
-  severe: "bg-destructive/20 text-destructive",
-  total_loss: "bg-destructive text-destructive-foreground",
+  minor: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+  partial: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
+  severe: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
+  total_loss: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
 };
 
 export default function Admin() {
@@ -89,18 +102,19 @@ export default function Admin() {
   // data + UI state
   const [victims, setVictims] = useState<Victim[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [showFilters, setShowFilters] = useState<boolean>(false);
 
   // filters / search / sort / pagination
   const [query, setQuery] = useState<string>("");
   const [filterDistrict, setFilterDistrict] = useState<string | null>(null);
   const [filterDamage, setFilterDamage] = useState<string | null>(null);
-  const [filterVerified, setFilterVerified] = useState<string | null>(null); // "all" | "verified" | "unverified"
+  const [filterVerified, setFilterVerified] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<{ col: string; asc: boolean }>({
     col: "created_at",
     asc: false,
   });
   const [page, setPage] = useState<number>(1);
-  const PAGE_SIZE = 12;
+  const PAGE_SIZE = 10;
 
   // selection & modal
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -129,7 +143,6 @@ export default function Admin() {
       // search by name, phone, district (simple)
       if (query && query.trim().length > 0) {
         const q = query.trim();
-        // Use ilike for partial match on multiple columns
         sb = sb.or(
           `full_name.ilike.%${q}%,phone_number.ilike.%${q}%,district.ilike.%${q}%`
         );
@@ -158,7 +171,6 @@ export default function Admin() {
         console.error("Supabase fetch error", resp.error);
         toast.error("Failed to load victims");
       } else {
-        // resp.data is the current page array
         setVictims(resp.data ?? []);
       }
     } catch (err) {
@@ -174,7 +186,7 @@ export default function Admin() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, sortBy, filterDistrict, filterDamage, filterVerified, query]);
 
-  // realtime subscription to refresh when victims table changes
+  // realtime subscription
   useEffect(() => {
     const channel = supabase
       .channel("public:victims")
@@ -186,7 +198,6 @@ export default function Admin() {
           table: "victims",
         },
         (payload) => {
-          // For simplicity, just re-fetch current page when any change happens
           fetchVictims();
         }
       )
@@ -233,7 +244,6 @@ export default function Admin() {
       } else {
         toast.success(verified ? "Verified" : "Unverified");
         setVictims((prev) => prev.map((v) => (v.id === id ? { ...v, verified, updated_at: new Date().toISOString() } : v)));
-        // optional: write an admin log to another table here
       }
     } catch (err) {
       console.error(err);
@@ -259,7 +269,6 @@ export default function Admin() {
         toast.error("Bulk update failed");
       } else {
         toast.success(`Updated ${ids.length} records`);
-        // update local state
         setVictims((prev) => prev.map((v) => (ids.includes(v.id) ? { ...v, verified, updated_at: new Date().toISOString() } : v)));
         clearSelection();
       }
@@ -313,7 +322,7 @@ export default function Admin() {
     window.open(`https://www.google.com/maps?q=${lat},${lng}`, "_blank");
   };
 
-  // handle sorting by column (toggle asc/desc)
+  // handle sorting by column
   const handleSort = (col: string) => {
     setSortBy((prev) => {
       if (prev.col === col) return { col, asc: !prev.asc };
@@ -323,324 +332,466 @@ export default function Admin() {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
+        <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-semibold">{t("admin.title") || "Admin"}</h1>
-            <p className="text-sm text-muted-foreground">{t("admin.analytics") || "Manage victims, donors & volunteers"}</p>
+            <h1 className="text-xl sm:text-2xl font-semibold">{t("admin.title") || "Admin Dashboard"}</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground">{t("admin.analytics") || "Manage victims, donors & volunteers"}</p>
           </div>
 
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-muted-foreground hidden sm:inline">{user?.email}</span>
-            <Button variant="outline" size="sm" onClick={() => { setPage(1); fetchVictims(); }} disabled={loading}>
-              <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-              Refresh
+          <div className="flex items-center gap-2 sm:gap-3">
+            <span className="text-xs sm:text-sm text-muted-foreground hidden sm:inline truncate max-w-[200px]">
+              {user?.email}
+            </span>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => { setPage(1); fetchVictims(); }} 
+              disabled={loading}
+              className="h-9 px-2 sm:px-4"
+            >
+              <RefreshCw className={`h-4 w-4 sm:mr-2 ${loading ? "animate-spin" : ""}`} />
+              <span className="hidden sm:inline">Refresh</span>
             </Button>
-            <Button variant="ghost" size="sm" onClick={signOut}>
-              <LogOut className="mr-2 h-4 w-4" />
-              Sign Out
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={signOut}
+              className="h-9 px-2 sm:px-4"
+            >
+              <LogOut className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Sign Out</span>
             </Button>
           </div>
         </div>
 
-        {/* Controls: Search / Filters / Bulk actions */}
-        <div className="mb-4 flex flex-col md:flex-row gap-3 items-start md:items-center">
-          <div className="flex-1 min-w-0">
-            <div className="relative">
-              <SearchIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by name, phone or district..."
-                value={query}
-                onChange={(e) => { setQuery(e.target.value); setPage(1); }}
-                className="pl-10"
-              />
+        {/* Search and Controls */}
+        <div className="mb-4 space-y-3">
+          {/* Search Bar */}
+          <div className="relative">
+            <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by name, phone or district..."
+              value={query}
+              onChange={(e) => { setQuery(e.target.value); setPage(1); }}
+              className="pl-10 h-10"
+            />
+          </div>
+
+          {/* Filters Toggle Button (Mobile) */}
+          <div className="flex items-center justify-between">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowFilters(!showFilters)}
+              className="sm:hidden"
+            >
+              <Filter className="h-4 w-4 mr-2" />
+              Filters {showFilters ? "(Hide)" : "(Show)"}
+            </Button>
+
+            {/* Bulk Actions Dropdown (Mobile) */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="sm:hidden">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={selectAllOnPage}>
+                  Select All
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={clearSelection}>
+                  Clear Selection
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => bulkVerify(true)}>
+                  Verify Selected
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => bulkVerify(false)}>
+                  Unverify Selected
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={exportSelectedCSV}>
+                  Export CSV
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          {/* Filters (Responsive) */}
+          <div className={`${showFilters ? 'block' : 'hidden'} sm:block`}>
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+              <Select
+                onValueChange={(v) => {
+                  setFilterDistrict(v === "all" ? null : v);
+                  setPage(1);
+                }}
+                value={filterDistrict ?? "all"}
+              >
+                <SelectTrigger className="w-full sm:w-[160px] h-10">
+                  <SelectValue placeholder="District" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Districts</SelectItem>
+                  {districts.map((d) => (
+                    <SelectItem key={d} value={d}>{d}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select
+                onValueChange={(v) => {
+                  setFilterDamage(v === "all" ? null : v);
+                  setPage(1);
+                }}
+                value={filterDamage ?? "all"}
+              >
+                <SelectTrigger className="w-full sm:w-[140px] h-10">
+                  <SelectValue placeholder="Damage" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Any Damage</SelectItem>
+                  <SelectItem value="minor">Minor</SelectItem>
+                  <SelectItem value="partial">Partial</SelectItem>
+                  <SelectItem value="severe">Severe</SelectItem>
+                  <SelectItem value="total_loss">Total Loss</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select
+                onValueChange={(v) => {
+                  setFilterVerified(v === "all" ? null : v);
+                  setPage(1);
+                }}
+                value={filterVerified ?? "all"}
+              >
+                <SelectTrigger className="w-full sm:w-[140px] h-10">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="verified">Verified</SelectItem>
+                  <SelectItem value="unverified">Unverified</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Bulk Actions (Desktop) */}
+              <div className="hidden sm:flex gap-2 ml-auto">
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="sm" onClick={selectAllOnPage}>
+                    Select All
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={clearSelection}>
+                    Clear
+                  </Button>
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="default" 
+                    size="sm" 
+                    onClick={() => bulkVerify(true)} 
+                    disabled={selectedIds.size === 0}
+                  >
+                    <Check className="h-4 w-4 mr-1" />
+                    Verify
+                  </Button>
+                  <Button 
+                    variant="destructive" 
+                    size="sm" 
+                    onClick={() => bulkVerify(false)} 
+                    disabled={selectedIds.size === 0}
+                  >
+                    <X className="h-4 w-4 mr-1" />
+                    Unverify
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={exportSelectedCSV}>
+                    <Download className="h-4 w-4 mr-1" />
+                    Export
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
-
-          <div className="flex gap-2">
-            {/* District filter */}
-            <Select
-              onValueChange={(v) => {
-                setFilterDistrict(v === "all" ? null : v);
-                setPage(1);
-              }}
-              value={filterDistrict ?? "all"}
-            >
-              <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder="All districts" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All districts</SelectItem>
-                {districts.map((d) => (
-                  <SelectItem key={d} value={d}>
-                    {d}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {/* Damage type filter */}
-            <Select
-              onValueChange={(v) => {
-                setFilterDamage(v === "all" ? null : v);
-                setPage(1);
-              }}
-              value={filterDamage ?? "all"}
-            >
-              <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="Damage type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Any</SelectItem>
-                <SelectItem value="minor">Minor</SelectItem>
-                <SelectItem value="partial">Partial</SelectItem>
-                <SelectItem value="severe">Severe</SelectItem>
-                <SelectItem value="total_loss">Total Loss</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* Verification filter */}
-            <Select
-              onValueChange={(v) => {
-                setFilterVerified(v === "all" ? null : v);
-                setPage(1);
-              }}
-              value={filterVerified ?? "all"}
-            >
-              <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="Verification" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="verified">Verified</SelectItem>
-                <SelectItem value="unverified">Unverified</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="ml-auto flex gap-2">
-            <Button variant="ghost" onClick={() => selectAllOnPage()}>
-              Select page
-            </Button>
-            <Button variant="outline" onClick={() => clearSelection()}>
-              Clear
-            </Button>
-
-            <Button variant="default" onClick={() => bulkVerify(true)} disabled={selectedIds.size === 0}>
-              <Check className="mr-2 h-4 w-4" />
-              Verify selected
-            </Button>
-
-            <Button variant="destructive" onClick={() => bulkVerify(false)} disabled={selectedIds.size === 0}>
-              <X className="mr-2 h-4 w-4" />
-              Unverify selected
-            </Button>
-
-            <Button variant="outline" onClick={exportSelectedCSV}>
-              <Download className="mr-2 h-4 w-4" />
-              Export CSV
-            </Button>
-          </div>
         </div>
 
-        {/* Summary cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Home className="h-4 w-4" /> Total Victims
+        {/* Summary Cards - Responsive Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4 sm:mb-6">
+          <Card className="overflow-hidden">
+            <CardHeader className="p-3 sm:p-4">
+              <CardTitle className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                <Home className="h-3 w-3 sm:h-4 sm:w-4" /> 
+                <span>Total</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{victims.length}</div>
-              <p className="text-xs text-muted-foreground">
-                <ShieldCheck className="h-3 w-3 inline mr-1" />
+            <CardContent className="p-3 sm:p-4 pt-0">
+              <div className="text-lg sm:text-2xl font-bold">{victims.length}</div>
+              <p className="text-xs text-muted-foreground truncate">
                 {victims.filter(v => v.verified).length} verified
               </p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Clock className="h-4 w-4" /> Pending
+          <Card className="overflow-hidden">
+            <CardHeader className="p-3 sm:p-4">
+              <CardTitle className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                <Clock className="h-3 w-3 sm:h-4 sm:w-4" /> 
+                <span>Pending</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-warning">
+            <CardContent className="p-3 sm:p-4 pt-0">
+              <div className="text-lg sm:text-2xl font-bold text-orange-600 dark:text-orange-400">
                 {victims.filter(v => !v.verified).length}
               </div>
-              <p className="text-xs text-muted-foreground">Awaiting verification</p>
+              <p className="text-xs text-muted-foreground">Awaiting</p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Users className="h-4 w-4" /> Families
+          <Card className="overflow-hidden">
+            <CardHeader className="p-3 sm:p-4">
+              <CardTitle className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                <Users className="h-3 w-3 sm:h-4 sm:w-4" /> 
+                <span>Families</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{victims.reduce((acc, v) => acc + (v.family_members || 0), 0)}</div>
-              <p className="text-xs text-muted-foreground">Total family members</p>
+            <CardContent className="p-3 sm:p-4 pt-0">
+              <div className="text-lg sm:text-2xl font-bold">
+                {victims.reduce((acc, v) => acc + (v.family_members || 0), 0)}
+              </div>
+              <p className="text-xs text-muted-foreground">Members</p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
-                <MapPin className="h-4 w-4" /> Geo tagged
+          <Card className="overflow-hidden">
+            <CardHeader className="p-3 sm:p-4">
+              <CardTitle className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                <MapPin className="h-3 w-3 sm:h-4 sm:w-4" /> 
+                <span>Mapped</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{victims.filter(v => v.latitude && v.longitude).length}</div>
-              <p className="text-xs text-muted-foreground">With coordinates</p>
+            <CardContent className="p-3 sm:p-4 pt-0">
+              <div className="text-lg sm:text-2xl font-bold">
+                {victims.filter(v => v.latitude && v.longitude).length}
+              </div>
+              <p className="text-xs text-muted-foreground">With GPS</p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Table */}
-        <div className="rounded-xl border border-border bg-card overflow-x-auto">
+        {/* Table Container */}
+        <div className="rounded-lg border border-border bg-card overflow-hidden">
           {loading ? (
-            <div className="flex items-center justify-center py-20">
+            <div className="flex items-center justify-center py-12 sm:py-20">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>
-                    <input
-                      type="checkbox"
-                      checked={victims.every((v) => selectedIds.has(v.id))}
-                      onChange={(e) => (e.target.checked ? selectAllOnPage() : clearSelection())}
-                    />
-                  </TableHead>
-                  <TableHead onClick={() => handleSort("verified")} className="cursor-pointer">
-                    Status
-                  </TableHead>
-                  <TableHead onClick={() => handleSort("photo_url")} className="cursor-pointer">Photo</TableHead>
-                  <TableHead onClick={() => handleSort("full_name")} className="cursor-pointer">Name</TableHead>
-                  <TableHead onClick={() => handleSort("phone_number")} className="cursor-pointer">Phone</TableHead>
-                  <TableHead onClick={() => handleSort("district")} className="cursor-pointer">Location</TableHead>
-                  <TableHead>GPS</TableHead>
-                  <TableHead onClick={() => handleSort("damage_type")} className="cursor-pointer">Damage</TableHead>
-                  <TableHead>Family</TableHead>
-                  <TableHead onClick={() => handleSort("created_at")} className="cursor-pointer">Date</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-
-              <TableBody>
-                {victims.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
-                      No victims found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  victims.map((victim) => (
-                    <TableRow key={victim.id} className={selectedIds.has(victim.id) ? "bg-muted/50" : ""}>
-                      <TableCell>
+            <>
+              <div className="overflow-x-auto">
+                <Table className="min-w-[800px] sm:min-w-full">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-10 px-2">
                         <input
                           type="checkbox"
-                          checked={selectedIds.has(victim.id)}
-                          onChange={() => toggleSelect(victim.id)}
+                          checked={victims.length > 0 && victims.every((v) => selectedIds.has(v.id))}
+                          onChange={(e) => (e.target.checked ? selectAllOnPage() : clearSelection())}
+                          className="h-4 w-4"
                         />
-                      </TableCell>
-
-                      <TableCell>
-                        <Badge variant={victim.verified ? "default" : "secondary"}>
-                          {victim.verified ? (t("admin.verifiedBadge") || "Verified") : (t("admin.pendingBadge") || "Pending")}
-                        </Badge>
-                      </TableCell>
-
-                      <TableCell>
-                        {victim.photo_url ? (
-                          <img
-                            src={victim.photo_url}
-                            alt="damage"
-                            className="w-16 h-12 object-cover rounded cursor-pointer"
-                            onClick={() => openDetail(victim)}
-                          />
-                        ) : (
-                          <span className="text-xs text-muted-foreground">-</span>
-                        )}
-                      </TableCell>
-
-                      <TableCell className="font-medium cursor-pointer" onClick={() => openDetail(victim)}>
-                        {victim.full_name}
-                      </TableCell>
-
-                      <TableCell>{victim.phone_number}</TableCell>
-
-                      <TableCell className="text-sm">
-                        {victim.district}, {victim.ds_division}
-                      </TableCell>
-
-                      <TableCell>
-                        {victim.latitude && victim.longitude ? (
-                          <Button variant="ghost" size="sm" onClick={() => openGoogleMaps(victim.latitude!, victim.longitude!)}>
-                            <MapPin className="h-4 w-4 mr-1" /> View
-                          </Button>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">-</span>
-                        )}
-                      </TableCell>
-
-                      <TableCell>
-                        <Badge className={damageColors[victim.damage_type] || ""}>
-                          {victim.damage_type?.replace("_", " ") ?? "-"}
-                        </Badge>
-                      </TableCell>
-
-                      <TableCell>{victim.family_members ?? "-"}</TableCell>
-
-                      <TableCell className="text-sm text-muted-foreground">
-                        {victim.created_at ? format(new Date(victim.created_at), "MMM d, yyyy") : "-"}
-                      </TableCell>
-
-                      <TableCell className="flex gap-2">
-                        {victim.verified ? (
-                          <Button variant="ghost" size="sm" onClick={() => verifyVictim(victim.id, false)}>
-                            <X className="h-4 w-4 mr-1" /> Unverify
-                          </Button>
-                        ) : (
-                          <Button variant="default" size="sm" onClick={() => verifyVictim(victim.id, true)}>
-                            <Check className="h-4 w-4 mr-1" /> Verify
-                          </Button>
-                        )}
-
-                        <Button variant="outline" size="sm" onClick={() => openDetail(victim)}>
-                          Details
-                        </Button>
-                      </TableCell>
+                      </TableHead>
+                      <TableHead className="px-2 sm:px-4">Status</TableHead>
+                      <TableHead className="px-2 sm:px-4">Photo</TableHead>
+                      <TableHead className="px-2 sm:px-4">Name</TableHead>
+                      <TableHead className="hidden sm:table-cell px-2 sm:px-4">Phone</TableHead>
+                      <TableHead className="px-2 sm:px-4">Location</TableHead>
+                      <TableHead className="hidden md:table-cell px-2 sm:px-4">GPS</TableHead>
+                      <TableHead className="px-2 sm:px-4">Damage</TableHead>
+                      <TableHead className="hidden md:table-cell px-2 sm:px-4">Family</TableHead>
+                      <TableHead className="hidden lg:table-cell px-2 sm:px-4">Date</TableHead>
+                      <TableHead className="px-2 sm:px-4">Actions</TableHead>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  </TableHeader>
+
+                  <TableBody>
+                    {victims.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
+                          No victims found. Try adjusting your filters.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      victims.map((victim) => (
+                        <TableRow key={victim.id} className={selectedIds.has(victim.id) ? "bg-muted/30" : ""}>
+                          <TableCell className="px-2">
+                            <input
+                              type="checkbox"
+                              checked={selectedIds.has(victim.id)}
+                              onChange={() => toggleSelect(victim.id)}
+                              className="h-4 w-4"
+                            />
+                          </TableCell>
+
+                          <TableCell className="px-2 sm:px-4">
+                            <Badge 
+                              variant={victim.verified ? "default" : "outline"} 
+                              className="text-xs"
+                            >
+                              {victim.verified ? "✓" : "Pending"}
+                            </Badge>
+                          </TableCell>
+
+                          <TableCell className="px-2 sm:px-4">
+                            {victim.photo_url ? (
+                              <div className="w-12 h-12 sm:w-16 sm:h-12 overflow-hidden rounded cursor-pointer" onClick={() => openDetail(victim)}>
+                                <img
+                                  src={victim.photo_url}
+                                  alt="damage"
+                                  className="w-full h-full object-cover hover:scale-105 transition-transform"
+                                />
+                              </div>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">-</span>
+                            )}
+                          </TableCell>
+
+                          <TableCell className="px-2 sm:px-4 font-medium">
+                            <button 
+                              onClick={() => openDetail(victim)}
+                              className="text-left hover:text-primary transition-colors"
+                            >
+                              <div className="truncate max-w-[100px] sm:max-w-[150px]">
+                                {victim.full_name}
+                              </div>
+                            </button>
+                          </TableCell>
+
+                          <TableCell className="hidden sm:table-cell px-2 sm:px-4">
+                            <div className="flex items-center gap-1">
+                              <Phone className="h-3 w-3 text-muted-foreground" />
+                              <span className="truncate max-w-[120px]">{victim.phone_number}</span>
+                            </div>
+                          </TableCell>
+
+                          <TableCell className="px-2 sm:px-4">
+                            <div className="text-xs sm:text-sm">
+                              <div className="truncate max-w-[80px] sm:max-w-[120px]">{victim.district}</div>
+                              <div className="text-xs text-muted-foreground truncate max-w-[80px] sm:max-w-[120px]">
+                                {victim.ds_division}
+                              </div>
+                            </div>
+                          </TableCell>
+
+                          <TableCell className="hidden md:table-cell px-2 sm:px-4">
+                            {victim.latitude && victim.longitude ? (
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => openGoogleMaps(victim.latitude!, victim.longitude!)}
+                                className="h-8 px-2"
+                              >
+                                <MapPin className="h-3 w-3 sm:mr-1" />
+                                <span className="hidden sm:inline">Map</span>
+                              </Button>
+                            ) : (
+                              <span className="text-muted-foreground text-xs">-</span>
+                            )}
+                          </TableCell>
+
+                          <TableCell className="px-2 sm:px-4">
+                            <Badge 
+                              className={`text-xs ${damageColors[victim.damage_type] || "bg-gray-100 text-gray-800"}`}
+                            >
+                              <span className="hidden sm:inline">
+                                {victim.damage_type?.replace("_", " ") || "-"}
+                              </span>
+                              <span className="sm:hidden">
+                                {victim.damage_type?.charAt(0).toUpperCase() || "-"}
+                              </span>
+                            </Badge>
+                          </TableCell>
+
+                          <TableCell className="hidden md:table-cell px-2 sm:px-4">
+                            {victim.family_members || "-"}
+                          </TableCell>
+
+                          <TableCell className="hidden lg:table-cell px-2 sm:px-4">
+                            <div className="text-xs text-muted-foreground flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              {victim.created_at ? format(new Date(victim.created_at), "MMM d") : "-"}
+                            </div>
+                          </TableCell>
+
+                          <TableCell className="px-2 sm:px-4">
+                            <div className="flex gap-1">
+                              {victim.verified ? (
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => verifyVictim(victim.id, false)}
+                                  className="h-8 px-2"
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              ) : (
+                                <Button 
+                                  variant="default" 
+                                  size="sm" 
+                                  onClick={() => verifyVictim(victim.id, true)}
+                                  className="h-8 px-2"
+                                >
+                                  <Check className="h-3 w-3" />
+                                </Button>
+                              )}
+                              
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => openDetail(victim)}
+                                className="h-8 px-2"
+                              >
+                                <Eye className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </div>
 
-        {/* Pagination controls */}
-        <div className="mt-4 flex items-center justify-between">
-          <div className="text-sm text-muted-foreground">
-            Page {page} • Showing up to {PAGE_SIZE} per page
+        {/* Pagination */}
+        <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="text-xs sm:text-sm text-muted-foreground">
+            Page {page} • Showing {victims.length} of many
           </div>
-          <div className="flex gap-2 items-center">
-            <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>
-              Prev
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setPage((p) => Math.max(1, p - 1))} 
+              disabled={page === 1}
+              className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              <span className="hidden sm:inline ml-1">Prev</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setPage((p) => p + 1)} disabled={victims.length < PAGE_SIZE}>
-              Next
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setPage((p) => p + 1)} 
+              disabled={victims.length < PAGE_SIZE}
+              className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
+            >
+              <span className="hidden sm:inline mr-1">Next</span>
+              <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
 
-        {/* Detail modal */}
+        {/* Detail Modal */}
         <Dialog open={detailModalOpen} onOpenChange={setDetailModalOpen}>
-          <DialogContent className="max-w-3xl">
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Victim Details</DialogTitle>
             </DialogHeader>
@@ -649,63 +800,131 @@ export default function Admin() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="col-span-1">
                   {activeVictim.photo_url ? (
-                    <img src={activeVictim.photo_url} alt="damage" className="w-full h-64 object-cover rounded" />
+                    <div className="relative w-full h-48 md:h-64">
+                      <img 
+                        src={activeVictim.photo_url} 
+                        alt="damage" 
+                        className="w-full h-full object-cover rounded-lg" 
+                      />
+                    </div>
                   ) : (
-                    <div className="w-full h-64 bg-muted rounded flex items-center justify-center">No image</div>
+                    <div className="w-full h-48 md:h-64 bg-muted rounded-lg flex items-center justify-center">
+                      No image available
+                    </div>
                   )}
                 </div>
 
-                <div className="col-span-2">
-                  <h3 className="text-lg font-semibold">{activeVictim.full_name}</h3>
-                  <p className="text-sm text-muted-foreground">{activeVictim.phone_number}</p>
+                <div className="col-span-1 md:col-span-2 space-y-4">
+                  <div>
+                    <h3 className="text-lg font-semibold">{activeVictim.full_name}</h3>
+                    <p className="text-sm text-muted-foreground">{activeVictim.phone_number}</p>
+                  </div>
 
-                  <div className="mt-3 space-y-2 text-sm">
-                    <div><strong>Location:</strong> {activeVictim.district}, {activeVictim.ds_division}, {activeVictim.gn_division}</div>
-                    <div><strong>Damage:</strong> {activeVictim.damage_type?.replace("_", " ")}</div>
-                    <div><strong>Family members:</strong> {activeVictim.family_members}</div>
-                    <div><strong>Needs:</strong> {Array.isArray(activeVictim.essential_needs) ? activeVictim.essential_needs.join(", ") : (activeVictim.essential_needs ?? "-")}</div>
-                    <div><strong>Verified:</strong> {activeVictim.verified ? "Yes" : "No"}</div>
-                    <div><strong>Reported:</strong> {format(new Date(activeVictim.created_at), "PPP p")}</div>
-                    <div>
-                      <strong>Coordinates:</strong>{" "}
-                      {activeVictim.latitude && activeVictim.longitude ? (
-                        <Button variant="link" onClick={() => openGoogleMaps(activeVictim.latitude!, activeVictim.longitude!)}>
-                          Open in Maps
-                        </Button>
-                      ) : (
-                        <span className="text-muted-foreground">No GPS</span>
-                      )}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium">District</p>
+                      <p className="text-sm">{activeVictim.district}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium">DS Division</p>
+                      <p className="text-sm">{activeVictim.ds_division}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium">GN Division</p>
+                      <p className="text-sm">{activeVictim.gn_division}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium">Damage</p>
+                      <Badge className={damageColors[activeVictim.damage_type]}>
+                        {activeVictim.damage_type?.replace("_", " ")}
+                      </Badge>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium">Family Members</p>
+                      <p className="text-sm">{activeVictim.family_members || "-"}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium">Status</p>
+                      <Badge variant={activeVictim.verified ? "default" : "outline"}>
+                        {activeVictim.verified ? "Verified" : "Pending"}
+                      </Badge>
                     </div>
                   </div>
 
-                  <div className="mt-4 flex gap-2">
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium">Essential Needs</p>
+                    <p className="text-sm">
+                      {Array.isArray(activeVictim.essential_needs) 
+                        ? activeVictim.essential_needs.join(", ") 
+                        : (activeVictim.essential_needs ?? "None specified")}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium">Reported</p>
+                      <p className="text-sm text-muted-foreground">
+                        {format(new Date(activeVictim.created_at), "PPP")}
+                      </p>
+                    </div>
+                    {activeVictim.latitude && activeVictim.longitude && (
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium">Coordinates</p>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => openGoogleMaps(activeVictim!.latitude!, activeVictim!.longitude!)}
+                        >
+                          <MapPin className="h-4 w-4 mr-2" />
+                          Open in Maps
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 pt-4">
                     {activeVictim.verified ? (
-                      <Button variant="ghost" onClick={() => { verifyVictim(activeVictim.id, false); setDetailModalOpen(false); }}>
-                        <X className="mr-2 h-4 w-4" /> Unverify
+                      <Button 
+                        variant="ghost" 
+                        onClick={() => { verifyVictim(activeVictim.id, false); setDetailModalOpen(false); }}
+                      >
+                        <X className="mr-2 h-4 w-4" />
+                        Unverify
                       </Button>
                     ) : (
-                      <Button variant="default" onClick={() => { verifyVictim(activeVictim.id, true); setDetailModalOpen(false); }}>
-                        <Check className="mr-2 h-4 w-4" /> Verify
+                      <Button 
+                        variant="default" 
+                        onClick={() => { verifyVictim(activeVictim.id, true); setDetailModalOpen(false); }}
+                      >
+                        <Check className="mr-2 h-4 w-4" />
+                        Verify
                       </Button>
                     )}
 
-                    <Button variant="outline" onClick={() => { navigator.clipboard.writeText(activeVictim.phone_number || ""); toast.success("Phone copied"); }}>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => { 
+                        navigator.clipboard.writeText(activeVictim.phone_number); 
+                        toast.success("Phone number copied"); 
+                      }}
+                    >
                       Copy Phone
                     </Button>
 
-                    <Button variant="ghost" onClick={() => { window.open(activeVictim.photo_url ?? "#", "_blank"); }}>
-                      Open Photo
-                    </Button>
+                    {activeVictim.photo_url && (
+                      <Button 
+                        variant="outline" 
+                        onClick={() => window.open(activeVictim.photo_url!, "_blank")}
+                      >
+                        Open Photo
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>
             ) : (
               <div>Loading...</div>
             )}
-
-            <DialogFooter>
-              <Button variant="secondary" onClick={() => setDetailModalOpen(false)}>Close</Button>
-            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
