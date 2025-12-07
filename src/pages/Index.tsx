@@ -1,6 +1,7 @@
+// src/pages/Index.tsx
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Home, Heart, Users, ArrowRight, MapPin, Mail, Phone, Shield } from "lucide-react";
+import { Home, Heart, Users, ArrowRight, MapPin, Mail, Phone, Shield, Waves } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -77,6 +78,30 @@ export default function Index() {
                 }
               />
             </div>
+            
+            {/* River Monitor Button - New Section */}
+            <div className="mt-12 animate-fade-in" style={{ animationDelay: "0.3s" }}>
+              <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-500/10 to-blue-600/10 rounded-full border border-blue-200 dark:border-blue-800 mb-4">
+                <Waves className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <span className="font-medium text-blue-700 dark:text-blue-300">Live River Monitoring</span>
+                <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+              </div>
+              
+              <p className="text-sm text-muted-foreground mb-6 max-w-lg mx-auto">
+                Track real-time river levels and flood warnings across Sri Lanka
+              </p>
+              
+              <a 
+                href="https://rivermonitorsl.homerelieflk.org/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-semibold transition-all hover:shadow-lg hover:scale-105"
+              >
+                <Waves className="h-5 w-5" />
+                Open River Monitor Dashboard
+                <ExternalLink className="h-4 w-4" />
+              </a>
+            </div>
           </div>
         </div>
       </section>
@@ -115,6 +140,43 @@ export default function Index() {
                 </Link>
               );
             })}
+          </div>
+          
+          {/* River Monitor Card - Add this below the actions section */}
+          <div className="mt-16 max-w-4xl mx-auto">
+            <div className="rounded-2xl border border-blue-200 dark:border-blue-800 bg-gradient-to-r from-blue-50 to-blue-100/30 dark:from-blue-900/20 dark:to-blue-800/10 p-8 animate-fade-in">
+              <div className="flex flex-col md:flex-row items-center gap-6">
+                <div className="flex-shrink-0">
+                  <div className="h-20 w-20 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center">
+                    <Waves className="h-10 w-10 text-white" />
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-2xl font-bold text-foreground mb-2">
+                    Live River Monitoring System
+                  </h3>
+                  <p className="text-muted-foreground mb-4">
+                    Track real-time river levels, rainfall data, and flood warnings across Sri Lanka. 
+                    Get instant alerts and make informed decisions during flood situations.
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    <a 
+                      href="https://rivermonitorsl.homerelieflk.org/" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-semibold transition-all hover:shadow-lg"
+                    >
+                      <Waves className="h-4 w-4" />
+                      Open River Monitor
+                      <ExternalLink className="h-4 w-4" />
+                    </a>
+                    <button className="inline-flex items-center gap-2 px-5 py-2.5 border border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300 rounded-lg font-medium hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors">
+                      Learn More
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -170,7 +232,19 @@ export default function Index() {
                     View Projects
                   </Link>
                 </li>
-                {/* New External Links */}
+                {/* River Monitor Link in Quick Links */}
+                <li>
+                  <a 
+                    href="https://rivermonitorsl.homerelieflk.org/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2"
+                  >
+                    <Waves className="h-4 w-4" />
+                    Live River Monitor
+                  </a>
+                </li>
+                {/* Other External Links */}
                 <li>
                   <a 
                     href="https://aid.floodsupport.org/" 
@@ -214,7 +288,21 @@ export default function Index() {
                 </li>
               </ul>
               
+              {/* River Monitor Mini Widget in Footer */}
               <div className="mt-8 pt-6 border-t border-border">
+                <div className="mb-4">
+                  <h4 className="text-sm font-semibold text-foreground mb-2">Real-time Monitoring</h4>
+                  <a 
+                    href="https://rivermonitorsl.homerelieflk.org/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+                  >
+                    <Waves className="h-4 w-4" />
+                    View live river levels →
+                  </a>
+                </div>
+                
                 <div className="flex items-center justify-center gap-2 mb-4">
                   <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
                     <Heart className="h-5 w-5 text-primary" />
@@ -231,9 +319,13 @@ export default function Index() {
               <p className="text-sm text-muted-foreground">
                 © 2025 HomeRelief Sri Lanka. {t("footer.allRightsReserved")}
               </p>
-              <div className="mt-4 md:mt-0">
+              <div className="mt-4 md:mt-0 flex flex-wrap gap-2">
                 <Badge variant="outline" className="px-3 py-1">
                   Serving all 25 districts
+                </Badge>
+                <Badge variant="outline" className="px-3 py-1 border-blue-300 text-blue-700 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-700">
+                  <Waves className="h-3 w-3 mr-1" />
+                  Live River Monitoring
                 </Badge>
               </div>
             </div>
